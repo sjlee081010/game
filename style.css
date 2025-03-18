@@ -1,0 +1,193 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+@font-face {
+    font-family: 'CookieRun-Regular';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    position: relative;
+    width:100vw;
+    height: 100vh;
+    background-color: #000;
+    overflow: hidden;
+}
+
+.map {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.map > img {
+    height: 1200px;
+}
+
+.stage01 > .box_boundary {
+    position: absolute;
+    top: 0;
+    width: 75%;
+    height: 71%;
+    left: 10%;
+    top: 14%;
+}
+
+.player {
+    position: absolute;
+    width: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    z-index: 100;
+}
+
+.player > img {
+    width: 100%;
+    z-index: 100;
+}
+
+.player > .box_legs {
+    width: 50%;
+    display: flex;
+    justify-content: space-between;
+    margin-top: -5px;
+    z-index: 99;
+}
+
+.player > .box_legs > img {
+    width: 30%;
+    transform-origin: 50% 0%;
+}
+
+#start_event {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000000b0;
+    top: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 500;
+    opacity: 0;
+}
+
+#start_event > span {
+    font-family: "CookieRun-Regular";
+    font-size: 60px;
+    color: #fff;
+    text-shadow: 0 3px 0px #000;
+}
+
+#timer {
+    position: fixed;
+    top: 50px;
+    right: 50px;
+    font-family: "CookieRun-Regular";
+    font-size: 40px;
+    color: #fff;
+    text-shadow: 0 0 5px #000;
+}
+
+#end_stage {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000000b0;
+    top: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#end_stage > .container {
+    position: relative;
+    width: 400px;
+    background-color: #5a5d67;
+    box-sizing: border-box;
+    border: 5px solid #777;
+    padding: 20px;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#end_stage > .container > .result {
+    position: absolute;
+    width: 200px;
+    height: 50px;
+    background-color: #ff702e;
+    border-radius: 5px;
+    left: 50%;
+    transform: translate(-50%, -75%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "CookieRun-Regular";
+    font-size: 30px;
+    color: #fff;
+    text-shadow: 0 2px 0 #000;
+}
+
+#end_stage > .container > .play_time {
+    padding: 25px 0 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: "CookieRun-Regular";
+    font-size: 40px;
+    color: #fff;
+    z-index: 500;
+}
+
+#end_stage > .container > .get {
+    width: 100%;
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#end_stage > .container > .get > span {
+    font-family: "CookieRun-Regular";
+    font-size: 30px;
+    color: #fff;
+}
+
+#end_stage > .container > .get > #get_item {
+    flex-grow: 1;
+    width: 100%;
+    background-color: #555;
+    border-radius: 10px;
+    box-sizing: border-box;
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+}
+
+#end_stage > .container > #btn_end {
+    width: 60%;
+    height: 50px;
+    background-color: #fa3434;
+    border-radius: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "CookieRun-Regular";
+    font-size: 30px;
+    color: #fff;
+    cursor: pointer;
+    margin-top: 15px;
+}

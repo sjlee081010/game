@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>디지특공대 | 플레이</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="map stage01">
+        <img src="./img/map_stage01.png" alt="map_stage01">
+        <div class="box_boundary">
+            <div class="player">
+                <img src="./img/player_body.png" alt="player_body">
+                <div class="box_legs">
+                    <img src="./img/player_leg.png" alt="leg_left">
+                    <img src="./img/player_leg.png" alt="leg_right">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="start_event">
+        <span></span>
+    </div>
+    <div id="timer">00:00</div>
+    <div id="end_stage">
+        <div class="container">
+            <div class="result">승리</div>
+            <div class="play_time">
+                <span>플레이 시간</span>
+                <span id="result_time">00:00</span>
+            </div>
+            <div class="get">
+                <span>획득:</span>
+                <div id="get_item"></div>
+            </div>
+            <div id="btn_end">종료</div>
+        </div>
+    </div>
+    <script src="./script.js"></script>
+</body>
+</html>
