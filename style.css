@@ -104,9 +104,11 @@ body {
     height: 100vh;
     background-color: #000000b0;
     top: 0;
-    display: flex;
+    /* display: flex; */
+    display: none;
     justify-content: center;
     align-items: center;
+    opacity: 0;
 }
 
 #end_stage > .container {
@@ -188,6 +190,57 @@ body {
     font-family: "CookieRun-Regular";
     font-size: 30px;
     color: #fff;
-    cursor: pointer;
+    /* cursor: pointer; */
     margin-top: 15px;
 }
+
+.levelup_page {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000000b0;
+    top: 0;
+    /* display: flex; */
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+#level_up {
+    width: 700px;
+    height: 200px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 500;
+}
+
+#level_up > div {
+    width: 150px;
+    height: 200px;
+}
+
+.upgrade_select {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.upgrade_select > h3 {
+    font-family: "CookieRun-Regular";
+}
+
+.upgrade_select > img {
+    width: 90%;
+    -webkit-user-drag: none;
+}
+
+.upgrade_select > p {
+    font-family: "CookieRun-Regular";
+}
+
