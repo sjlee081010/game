@@ -6,10 +6,14 @@ document.addEventListener("visibilitychange", () => {
 
 const player = {
     element: document.querySelector('.player'),
-    speed: 1,
+    maxHp: 100,
     hp: 100,
+    speed: 1,
+    damage: 15,
+    atSpeed: 1,
     x: 0,
     y: 0,
+    die: false,
 }
 
 const Player = () => {
@@ -100,73 +104,26 @@ const Player = () => {
     walk();
 };
 
-const isColliding = (object1, object2) => {
-    const x1 = object1.offsetLeft + object1.clientWidth / 2;
-    const y1 = object1.offsetTop + object1.clientHeight / 2;
-    const x2 = object2.x + object2.element.clientWidth / 2;
-    const y2 = object2.y + object2.element.clientHeight / 2;
+const playerDamaged = (damage) => {
+    const bar = document.querySelector('.hp_bar');
 
-    const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-    const combinedRadius = (object1.clientWidth + object2.element.clientWidth) / 2;
+    player.hp -= damage;
+    const percent = (player.hp / player.maxHp) * 100;
 
-    return distance <= combinedRadius;
-};
+    bar.style.width = `${percent}%`;
 
-const destroyEnemy = (enemy) => {
-    enemy.element.remove();
-    enemies = enemies.filter(e => e !== enemy);
-};
-
-const handleAttack = (enemy) => {
-    enemy.health -= 10;
-    if (enemy.health <= 0) {
-        destroyEnemy(enemy);
+    if (player.hp <= 0) {
+        player.die = true;
+        gamePaused = true;
+        showResult(stage01, 1.5);
     }
 };
-
-const createRotatingObject = (player) => {
-    const rotatingObject = document.createElement('div');
-    rotatingObject.style.position = 'absolute';
-    rotatingObject.style.width = '20px';
-    rotatingObject.style.height = '20px';
-    rotatingObject.style.backgroundColor = 'red';
-    rotatingObject.style.borderRadius = '50%';
-    document.body.appendChild(rotatingObject);
-
-    let angle = 0;
-    const radius = 150;
-    const speed = 0.01;
-
-    const updateRotatingObject = () => {
-        const centerX = player.x;
-        const centerY = player.y;
-
-        angle += speed;
-        if (angle >= 2 * Math.PI) angle = 0;
-
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
-
-        rotatingObject.style.left = `${x - rotatingObject.clientWidth / 2}px`;
-        rotatingObject.style.top = `${y - rotatingObject.clientHeight / 2}px`;
-
-        enemies.forEach(enemy => {
-            if (isColliding(rotatingObject, enemy)) {
-                handleAttack(enemy);
-            }
-        });
-
-        requestAnimationFrame(updateRotatingObject);
-    };
-
-    updateRotatingObject();
-};
-
 
 const enemies = [];
 
 const Enemy = (enemy, time, repeat) => {
     return new Promise((resolve) => {
+        enemy();
         const interval = setInterval(() => {
             if (!gamePaused) enemy();
         }, repeat * 1000);
@@ -177,6 +134,117 @@ const Enemy = (enemy, time, repeat) => {
         }, time * 60 * 1000);
     });
 };
+
+
+const attackRange = (x, y, enemy) => {
+    const rangeX = player.element.clientWidth / 2 + enemy.clientWidth / 3.5;
+    const rangeY = player.element.clientHeight / 2 + enemy.clientHeight / 3.5;
+
+    return Math.abs(x) < rangeX && Math.abs(y) < rangeY;
+};
+
+const findEnemy = () => {
+    let closeEnemy, closeDistance = Infinity;
+    for (const enemy of enemies) {
+      const px = player.x - enemy.x;
+      const py = player.y - enemy.y;
+      const distance = Math.sqrt(px * px + py * py);
+      if (distance < closeDistance) {
+        closeDistanceDistance = distance;
+        closeEnemy = enemy;
+      }
+    }
+    return closeEnemy;
+};
+
+const weaponSpeed = 2.25;
+const weapons = [];
+
+const attack = () => {
+    const boundary = document.querySelector('.box_boundary');
+    const img = document.createElement('img');
+
+    img.src = "./img/back_pack.png";
+    img.style.position = "absolute";
+    img.style.width = "30px";
+    img.style.zIndex = "150";
+    img.style.top = '40%';
+    player.element.appendChild(img);
+
+    const shoot = () => {
+        const target = findEnemy();
+        if (!target) return; // 적이 없으면 발사하지 않음
+
+        const weapon = document.createElement('img');
+        weapon.src = "./img/back_pack.png";
+        weapon.style.position = "absolute";
+        weapon.style.width = "30px";
+        weapon.style.zIndex = "250";
+        weapon.style.top = '40%';
+
+        boundary.appendChild(weapon);
+
+        const distanceX = target.x - player.x;
+        const distanceY = target.y - player.y;
+        const distance = Math.hypot(distanceX, distanceY);
+
+        if (distance === 0) return;
+
+        const vx = distanceX / distance;
+        const vy = distanceY / distance;
+        const angle = Math.atan2(distanceY, distanceX) * (180 / Math.PI);  
+        weapon.style.transform = `rotate(${angle+90}deg)`;
+
+        const data = { 
+            element: weapon, 
+            x: player.x, 
+            y: player.y, 
+            vx: vx, 
+            vy: vy, 
+            target: target,
+            fired: false
+        };
+        weapons.push(data);
+
+        const moveBullet = () => {
+            if (gamePaused) return;
+
+            data.x += data.vx * weaponSpeed;
+            data.y += data.vy * weaponSpeed;
+            data.element.style.left = `${data.x-10}px`;
+            data.element.style.top = `${data.y}px`;
+
+            if (Math.abs(data.target.x - data.x) < data.target.element.clientWidth / 2 &&
+                Math.abs(data.target.y - data.y) < data.target.element.clientHeight / 2 && !data.fired) {
+
+                data.fired = true;
+                data.element.remove();
+                weapons.splice(weapons.indexOf(data), 1);
+                data.target.hp -= player.damage;
+
+                if (data.target.hp <= 0) {
+                    data.target.element.remove();
+                    enemies.splice(enemies.indexOf(data.target), 1);
+                }
+            }
+
+            if (data.x < 0 || data.x > boundary.clientWidth || data.y < 0 || data.y > boundary.clientHeight) {
+                data.element.remove();
+                weapons.splice(weapons.indexOf(data), 1);
+                return;
+            }
+
+            if (!gamePaused) requestAnimationFrame(moveBullet);
+        };
+        moveBullet();
+    };
+
+    setInterval(() => {
+        if (!gamePaused) shoot();
+    }, player.atSpeed * 1000);
+}
+attack();
+
 
 const spawnPosition = () => {
     const boundary = document.querySelector('.box_boundary');
@@ -198,11 +266,8 @@ const spawnPosition = () => {
     }
 
     return {x, y};
-};  
-
-const attackRange = (x, y) => {
-    return Math.abs(x) < player.element.clientWidth / 2 && Math.abs(y) < player.element.clientHeight / 2;
 };
+
 
 const spawnEnemy01 = () => {
     const enemy = document.createElement('div');
@@ -233,10 +298,33 @@ const spawnEnemy01 = () => {
     enemy.appendChild(enemyBody);
     enemy.appendChild(legsContainer);
 
-    return {enemy, leftLeg, rightLeg};
+    return {enemy, leftLeg, rightLeg, enemyHead};
 };
 
-spawnEnemy01()
+const attackEnemy01 = (enemy) => {
+    if (enemy.isAttacking || enemy.hp <= 0) return;
+
+    enemy.isAttacking = true;
+    enemy.head.style.transition = 'transform 0.4s ease-in-out';
+
+    const dx = player.x - enemy.x;
+    const attackAngle = dx > 0 ? 45 : -45;
+
+    enemy.head.style.transformOrigin = '50% 100%';
+    enemy.head.style.transform = `rotate(${attackAngle}deg)`;
+
+    setTimeout(() => {
+        enemy.head.style.transform = 'rotate(0deg)';
+        enemy.isAttacking = false;
+
+        const dx = player.x - enemy.x;
+        const dy = player.y - enemy.y;
+
+        if (attackRange(dx, dy, enemy.element)) {
+            playerDamaged(enemy.damage);
+        }
+    }, 500);
+};
 
 const enemy01 = () => {
     const boundary = document.querySelector('.box_boundary');
@@ -249,13 +337,19 @@ const enemy01 = () => {
         x: position.x,
         y: position.y,
         speed: 0.8,
-        hp: 50,
+        hp: 30,
+        damage: 10,
         degDirection: -1,
         leftLegDeg: 0,
         rightLegDeg: 0,
         leftLeg: objectInfo.leftLeg,
-        rightLeg: objectInfo.rightLeg
+        rightLeg: objectInfo.rightLeg,
+        head: objectInfo.enemyHead,
+        lastAttackTime: 0,
+        attackCooldown: 1000,
+        isAttacking: false
     };
+
     enemies.push(enemy);
 
     object.style.left = `${enemy.x}px`;
@@ -267,14 +361,15 @@ const enemy01 = () => {
         const dx = player.x - enemy.x;
         const dy = player.y - enemy.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-  
-        if (!attackRange(dx, dy)) {
-            enemy.lastAttackTime = null;
+        const currentTime = Date.now();
+
+        if (!attackRange(dx, dy, enemy.element) && !enemy.isAttacking) {
+            enemy.lastAttackTime = 0;
             if (distance > 0) {
                 enemy.x += (dx / distance) * enemy.speed;
                 enemy.y += (dy / distance) * enemy.speed;
             }
-  
+
             enemy.leftLegDeg += (enemy.speed * 0.6) * enemy.degDirection;
             enemy.rightLegDeg -= (enemy.speed * 0.6) * enemy.degDirection;
             if (enemy.leftLegDeg <= -15 || enemy.leftLegDeg >= 15) {
@@ -282,28 +377,7 @@ const enemy01 = () => {
             }
             enemy.leftLeg.style.transform = `rotate(${enemy.leftLegDeg}deg)`;
             enemy.rightLeg.style.transform = `rotate(${enemy.rightLegDeg}deg)`;
-  
-            for (const other of enemies) {
-                if (other === enemy) continue;
-            
-                const ex = other.x - enemy.x;
-                const ey = other.y - enemy.y;
-                const enemyDistance = Math.sqrt(ex * ex + ey * ey);
-            
-                const minDistance = (enemy.element.clientWidth / 2) + (other.element.clientWidth / 2);
-            
-                if (enemyDistance < minDistance) {
-                    const overlap = minDistance - enemyDistance;
-            
-                    const pushX = (ex / enemyDistance) * overlap * 0.5;
-                    const pushY = (ey / enemyDistance) * overlap * 0.5;
-                    enemy.x -= pushX;
-                    enemy.y -= pushY;
-            
-                    other.x += pushX;
-                    other.y += pushY;
-                }
-            }
+
         } else {
             if (enemy.leftLegDeg > 0) {
                 enemy.leftLegDeg = Math.max(0, enemy.leftLegDeg - enemy.speed * 0.6);
@@ -315,15 +389,37 @@ const enemy01 = () => {
             enemy.leftLeg.style.transform = `rotate(${enemy.leftLegDeg}deg)`;
             enemy.rightLeg.style.transform = `rotate(${enemy.rightLegDeg}deg)`;
 
-            // attackEnemy01();
+            if (currentTime - enemy.lastAttackTime >= enemy.attackCooldown) {
+                attackEnemy01(enemy);
+                enemy.lastAttackTime = currentTime;
+            }
+        }
+
+        for (const other of enemies) {
+            if (other === enemy) continue;
+
+            const ex = other.x - enemy.x;
+            const ey = other.y - enemy.y;
+            const enemyDistance = Math.sqrt(ex * ex + ey * ey);
+            const minDistance = (enemy.element.clientWidth / 2) + (other.element.clientWidth / 2);
+
+            if (enemyDistance < minDistance) {
+                const overlap = minDistance - enemyDistance;
+                const pushX = (ex / enemyDistance) * overlap * 0.5;
+                const pushY = (ey / enemyDistance) * overlap * 0.5;
+                enemy.x -= pushX;
+                enemy.y -= pushY;
+                other.x += pushX;
+                other.y += pushY;
+            }
         }
 
         const enemyWidth = enemy.element.clientWidth;
         const enemyHeight = enemy.element.clientHeight;
         enemy.element.style.left = `${enemy.x}px`;
         enemy.element.style.top = `${enemy.y}px`;
-        enemy.x = Math.max(enemyWidth/2, Math.min(enemy.x, boundary.clientWidth - enemyWidth/2));
-        enemy.y = Math.max(enemyHeight/2, Math.min(enemy.y, boundary.clientHeight - enemyHeight/2));
+        enemy.x = Math.max(enemyWidth / 2, Math.min(enemy.x, boundary.clientWidth - enemyWidth / 2));
+        enemy.y = Math.max(enemyHeight / 2, Math.min(enemy.y, boundary.clientHeight - enemyHeight / 2));
 
         requestAnimationFrame(move);
     };
@@ -334,10 +430,6 @@ const enemy02 = () => {
 
 };
 
-const enemy03 = () => {
-
-};
-
 const boss01 = () => {
 
 }
@@ -345,14 +437,13 @@ const boss01 = () => {
 let enemy = {
     enemy01: enemy01,
     enemy02: enemy02,
-    enemy03: enemy03
 };
 
 let boss = {
     boss01: boss01
 };
 
-const rotate = (parent) => {
+const selectBox = (title, exp, func) => {
     const box = document.createElement('div');
     const h3 = document.createElement('h3');
     const img = document.createElement('img');
@@ -361,50 +452,48 @@ const rotate = (parent) => {
     box.classList.add('upgrade_select');
     box.classList.add('rotate');
 
-    img.src = './img/rotate.png';
-    img.alt = 'rotate';
+    img.src = `./img/${title}.png`;
+    img.alt = `${title}`;
 
     parent.appendChild(box);
     box.appendChild(h3);
     box.appendChild(img);
     box.appendChild(p);
 
-    h3.textContent = 'rotate';
-    p.textContent = '회전하는 표창 추가';
+    h3.textContent = `${title}`;
+    p.textContent = `${exp}`;
 
     box.addEventListener('click', () => {
         document.querySelector('.levelup_page').style.display = 'none';
-        createRotatingObject(player);  
+        func();
     });
 };
 
-
-const shooting = (parent) => {
-    const box = document.createElement('div');
-    const h3 = document.createElement('h3');
-    const img = document.createElement('img');
-    const p = document.createElement('p');
-
-    box.classList.add('upgrade_select');
-    box.classList.add('shooting');
-
-    img.src = './img/shooting.png';
-    img.alt = 'shooting';
-
-    parent.appendChild(box);
-    box.appendChild(h3);
-    box.appendChild(img);
-    box.appendChild(p);
-
-    h3.textContent = 'shooting';
-    p.textContent = '총알 1개 추가';
-
-    box.addEventListener('click', () => {
-        document.querySelector('.levelup_page').style.display = 'none';
-    });
+const rotate = () => {
+    
 };
 
-const upgrade = [rotate, shooting];
+const damageUp = () => {
+
+};
+
+const speedUp = () => {
+
+};
+
+const atSpeedUp = () => {
+
+};
+
+const hpUp = () => {
+
+};
+
+const circle = () => {
+
+};
+
+const upgrade = [rotate, damageUp, speedUp, atSpeedUp, hpUp, circle];
 
 const levelUp = () => {
     document.querySelector('.levelup_page').style.display = 'flex';
@@ -421,7 +510,8 @@ const Timer = (stage) => {
     const timer = document.getElementById('timer');
 
     setInterval(() => {
-        if (stage.clear === true) return;
+        if(gamePaused) return;
+        if (stage.clear === true || player.die === true) return;
         seconds++;
         if (seconds === 60) {
             seconds = 0;
@@ -482,6 +572,7 @@ const closeStage = () => {
 let stage01 = {
     time: 5,
     gold: 500,
+    item: false,
     clear: false
 };
 
@@ -489,11 +580,12 @@ async function Stage01() {
     // await showStage("1 - 운동장", 4.5);
     Timer(stage01);
     Player();
-    levelUp();
+    // levelUp();
     await Enemy(enemy.enemy01, 1.5, 3);
     // await Enemy(enemy.enemy01, 0.5, 2);
-    // await Enemy(enemy.enemy01, 0.5, 1);
+    // await Enemy(enemy.enemy02, 0.5, 3);
+    // await Enemy(enemy.enemy02, 0.5, 2);
     // await Enemy(boss.boss01);
-    showResult(stage01, 1.5);
+    // showResult(stage01, 1.5);
 };
 Stage01();

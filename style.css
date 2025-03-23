@@ -68,6 +68,20 @@ body {
     transform-origin: 50% 0%;
 }
 
+.player > .hp_background {
+    position: absolute;
+    width: 100%;
+    height: 5px;
+    background-color: #eee;
+    top: -10px;
+}
+
+.player > .hp_background > .hp_bar {
+    width: 100%;
+    height: 100%;
+    background-color: #41f818;
+}
+
 #start_event {
     position: fixed;
     width: 100vw;
